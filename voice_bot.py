@@ -8,7 +8,7 @@ import os
 import tempfile
 import edge_tts
 
-openai.api_key = "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"
+openai.api_key = "sk-....API_KEY"
 
 # Load Whisper model once
 model = whisper.load_model("base")
