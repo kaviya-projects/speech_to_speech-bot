@@ -65,8 +65,8 @@ Then start speaking into the mic. Use keywords like:
 
 ## 🎥 Demo Screenshot
 
-![Demo Screenshot](<img width="1342" height="1019" alt="image" src="https://github.com/user-attachments/assets/cf235de0-db6e-4052-bf1b-cfc2039049bf" /><img width="1303" height="1001" alt="image" src="https://github.com/user-attachments/assets/d88fcdf4-bdb2-42c2-9561-4d2f2256de6a" /><img width="1340" height="1017" alt="image" src="https://github.com/user-attachments/assets/ce3d8f08-e146-4390-b417-b64014bbb0f0" />
-)
+<img width="1342" height="1019" alt="image" src="https://github.com/user-attachments/assets/cf235de0-db6e-4052-bf1b-cfc2039049bf" /><img width="1303" height="1001" alt="image" src="https://github.com/user-attachments/assets/d88fcdf4-bdb2-42c2-9561-4d2f2256de6a" /><img width="1340" height="1017" alt="image" src="https://github.com/user-attachments/assets/ce3d8f08-e146-4390-b417-b64014bbb0f0" />
+
 
 ---
 
