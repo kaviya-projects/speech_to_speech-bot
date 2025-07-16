@@ -7,7 +7,7 @@ import asyncio
 import os
 import tempfile
 import edge_tts
-
+ 
 openai.api_key = "sk-....API_KEY"
 
 # Load Whisper model once
