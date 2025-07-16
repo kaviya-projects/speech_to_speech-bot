@@ -1,0 +1,165 @@
+import sounddevice as sd
+import scipy.io.wavfile as wav
+import whisper
+from gtts import gTTS
+import pygame
+import os
+import time
+import threading
+
+interrupted = False
+whisper_model = whisper.load_model("base")  
+
+#  Record audio
+def record_audio(filename="input.wav", duration=4, fs=44100):
+    print(f"\n🎤 Recording for {duration} seconds... Start speaking now!")
+    recording = sd.rec(int(duration * fs), samplerate=fs, channels=1, dtype='int16')
+    sd.wait()
+    wav.write(filename, fs, recording)
+    print(" Audio saved to", filename)
+    return filename
+
+#  Transcribe audio
+def transcribe_audio(filepath):
+    print("Transcribing using Whisper...")
+    try:
+        result = whisper_model.transcribe(filepath)
+        print("📝 You said:", result["text"])
+        return result["text"]
+    except Exception as e:
+        print("❌ Transcription error:", str(e))
+        return ""
+
+# 🤖 Generate a basic response (Gemini-style)
+def generate_response(text):
+    text_lower = text.lower()
+    if "joke" in text_lower:
+        return "Why don’t skeletons fight each other? They don’t have the guts!"
+    elif "time" in text_lower:
+        from datetime import datetime
+        return f"The current time is {datetime.now().strftime('%I:%M %p')}"
+    elif "your name" in text_lower:
+        return "I am VoiceBot, your AI assistant!"
+    elif "location" in text_lower:
+        return "I'm a virtual assistant. I live in the cloud!"
+    elif "weather" in text_lower:
+        return "Sorry, I can't access live weather info offline, but it's always sunny here!"
+    elif "how are you" in text_lower:
+        return "I'm doing great, thank you! How about you?"
+    elif "exit" in text_lower or "bye" in text_lower or "quit" in text_lower or "stop" in text_lower:
+        return "Goodbye! Have a nice day!"
+    elif "who created you" in text_lower:
+        return "I was created using Python and some clever AI models!"
+    elif "what can you do" in text_lower:
+        return "I can understand your voice, respond smartly, and even handle interruptions!"
+    elif "thank you" in text_lower:
+        return "You're welcome!"
+    elif "machine learning" in text_lower:
+        return "Machine Learning is a field of AI that trains models to make predictions or decisions based on data."
+    elif "deep learning" in text_lower:
+        return "Deep Learning uses neural networks with many layers to analyze complex data patterns."
+    elif "cv" in text_lower or "resume" in text_lower:
+        return "To improve your CV, highlight your skills, showcase real projects, and keep it concise."
+    elif "interview" in text_lower:
+        return "Interview prep includes practicing coding, researching the company, and preparing project stories."
+    else:
+        return "🤖 Bot: You said – " + text
+
+# ⛔ Detect interruption during playback
+def detect_interrupt(threshold=0.02, duration=0.5, fs=44100):
+    global interrupted
+    try:
+        duration_samples = int(duration * fs)
+        while pygame.mixer.music.get_busy():
+            audio_data = sd.rec(duration_samples, samplerate=fs, channels=1, dtype='float32')
+            sd.wait()
+            volume = abs(audio_data).mean()
+            if volume > threshold:
+                interrupted = True
+                print("⛔ Interrupt detected! Listening for new input...")
+                if pygame.mixer.get_init():
+                    pygame.mixer.music.stop()
+                break
+    except Exception as e:
+        print("⚠️ Interrupt detection error:", e)
+
+# 🔊 Speak the text aloud
+def speak_text(text):
+    global interrupted
+    interrupted = False
+    try:
+        if pygame.mixer.get_init():
+            pygame.mixer.quit()
+        tts = gTTS(text=text, lang='en')
+        tts.save("response.mp3")
+
+        pygame.mixer.init()
+        pygame.mixer.music.load("response.mp3")
+        pygame.mixer.music.play()
+
+        interrupt_thread = threading.Thread(target=detect_interrupt)
+        interrupt_thread.start()
+
+        while pygame.mixer.music.get_busy() and not interrupted:
+            time.sleep(0.1)
+
+        pygame.mixer.quit()
+        try:
+            os.remove("response.mp3")
+        except Exception as e:
+            print("⚠️ Could not delete audio file:", e)
+    except Exception as e:
+        print("❌ Speech error:", e)
+
+# 🧠 Main chatbot loop
+def run_bot():
+    global interrupted
+    print("\n🎧 Voice Chatbot is running (Gemini-style + Wikipedia-like answers + Smart Interruption)")
+    print("🗣️ Say something... or say 'exit' to quit.")
+
+    while True:
+        audio_path = record_audio()
+        if not os.path.exists(audio_path):
+            continue
+
+        text = transcribe_audio(audio_path)
+
+        try:
+            os.remove(audio_path)
+        except:
+            pass
+
+        if any(x in text.lower() for x in ["exit", "bye", "quit", "stop"]):
+            response = generate_response(text)
+            speak_text(response)
+            print("👋 Exiting VoiceBot. Have a great day!")
+            break
+
+        response = generate_response(text)
+        speak_text(response)
+
+        while interrupted:
+            interrupted = False
+            print("🔄 Ready for your interrupted query...")
+            audio_path = record_audio()
+            if not os.path.exists(audio_path):
+                continue
+
+            text = transcribe_audio(audio_path)
+
+            try:
+                os.remove(audio_path)
+            except:
+                pass
+
+            if any(x in text.lower() for x in ["exit", "bye", "quit", "stop"]):
+                response = generate_response(text)
+                speak_text(response)
+                print("👋 Exiting VoiceBot. Take care!")
+                return
+
+            response = generate_response(text)
+            speak_text(response)
+
+if __name__ == "__main__":
+    run_bot()
